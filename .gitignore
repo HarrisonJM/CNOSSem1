@@ -1,0 +1,90 @@
+kip to content
+Personal
+Open source
+Business
+Explore
+Pricing
+Blog
+Support
+This repository
+
+1,879
+43,472
+
+    17,592
+
+github/gitignore
+Code
+Pull requests 175
+Projects 0
+Pulse
+Graphs
+gitignore/C.gitignore
+326dc28 on 4 Oct
+@Leandros Leandros Merge branch 'master' into HEAD
+@Leandros
+@aarian93p
+@rye
+@dashed
+@eugpermar
+@dybekm
+@starrify
+@arsenm
+@mattjeffery
+@adericbourg
+@snisarg
+52 lines (43 sloc) 415 Bytes
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+#Misc
+gitdebbie
