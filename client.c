@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
 	struct sockaddr_in their_addr; /* server address info */
 
 	unsigned char datagramBody[MAXDATASIZE]; /* This is the body of the Datagram*/
-	unsigned char datagramRec[MAXDATASIZE];
+	char datagramRec[MAXDATASIZE];
 
 	// printf("Size of datagram is: %d\n\n", sizeof(*datagram));
 	// printf("Size of header is: %d\n\n", sizeof(datagram->header));
@@ -208,13 +208,14 @@ u_int64_t CurrentTimems()
 int CompileTimeStamp(unsigned char* s, u_int64_t time)
 {
 	int index = 40; //How many bytes into the packet we need to start
-	//network order is big endian, x86 is little endian
+	
 	u_int64_t seconds = time / 1000;
 	u_int64_t milliseconds = time - seconds * 1000;  //for fractions of a second
 	u_int64_t fraction = milliseconds * 0x1000000000 / 1000;
 
 	seconds += NTPEPOCH; //ADD SECONDS SINCE 1900
 
+	//network order is big endian, x86 is little endian
 	s[index++] = (char)seconds >> 24; //S is a char*, each element is a char
 	s[index++] = (char)seconds >> 16;
 	s[index++] = (char)seconds >> 8;
