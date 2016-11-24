@@ -82,6 +82,7 @@ uint32_t read32(char* buffer, int offset)
     uint32_t i2 = ((b2 & 0x80) == 0x80 ? (b2 & 0x7F) + 0x80 : b2);
     uint32_t i3 = ((b3 & 0x80) == 0x80 ? (b3 & 0x7F) + 0x80 : b3);
 
+    
     uint32_t v = (i0 << 24) + (i1 << 16) + (i2 << 8) + i3;
     return v;
 }
