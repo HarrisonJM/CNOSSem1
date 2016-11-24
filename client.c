@@ -54,8 +54,10 @@
 unsigned short CalcChecksum(unsigned short *ptr, int nbytes);
 
 u_int64_t CurrentTimems();
-int CompileTimeStamp(char* s, u_int64_t time);
-int BuildDataGram(char* datagram, u_int64_t* timeOfRequest, u_int64_t* systemTimeOfRequest);
+int CompileTimeStamp(unsigned char* s, u_int64_t time);
+int BuildDataGram(unsigned char* datagram, u_int64_t* timeOfRequest, u_int64_t* systemTimeOfRequest);
+
+//int Checksum(struct PH, int *checksum);
 
 int main(int argc, char * argv[])
 {
@@ -63,7 +65,9 @@ int main(int argc, char * argv[])
 	u_int64_t timeOfRequest, sysReqTime; //clock of time made, computer uptime fo reference
 	struct hostent *he;
 	struct sockaddr_in their_addr; /* server address info */
-	char datagram[MAXDATASIZE];
+
+	unsigned char datagramBody[MAXDATASIZE]; /* This is the body of the Datagram*/
+	unsigned char datagramRec[MAXDATASIZE];
 
 	// printf("Size of datagram is: %d\n\n", sizeof(*datagram));
 	// printf("Size of header is: %d\n\n", sizeof(datagram->header));
@@ -85,7 +89,7 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) //sockfd = file decriptor
 	{
 		perror("Client: Socket Creation Failure");
 		exit(1);
@@ -96,11 +100,11 @@ int main(int argc, char * argv[])
 	their_addr.sin_port = htons(SNTPPort);					/*...short, netwk byte order*/
 	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
 
-	BuildDataGram(datagram, &timeOfRequest, &sysReqTime);
+	BuildDataGram(datagramBody, &timeOfRequest, &sysReqTime);
 
 	//sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
-	if((numbytes = sendto(sockfd, datagram, sizeof(datagram), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
-	{
+	if((numbytes = sendto(sockfd, datagramBody, sizeof(datagramBody), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
+	{ //sendto returns number of bytes sent
 		perror("Client: Error Sending Datagram");
 		exit(1);
 	}
@@ -109,9 +113,8 @@ int main(int argc, char * argv[])
 
 	addr_len = sizeof(struct sockaddr);
 
-
 	/* receives Datagram*/
-	if((numbytes = recvfrom(sockfd, datagram, sizeof(datagram), 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
+	if((numbytes = recvfrom(sockfd, datagramRec, sizeof(datagramRec), 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
 	{
 		perror("Client: Error Receiving Datagram");
 		exit(1);
@@ -120,8 +123,8 @@ int main(int argc, char * argv[])
 	printf("A datagram has been received!");
 	//printf("Time is: %s\n", argv[2]);
 
-
 	close(sockfd);
+	getchar();
 	return 0;
 }
 
@@ -202,10 +205,10 @@ u_int64_t CurrentTimems()
  * EPOCH and little -> big endian
  */
 /***************************************************/
-int CompileTimeStamp(char* s, u_int64_t time)
+int CompileTimeStamp(unsigned char* s, u_int64_t time)
 {
 	int index = 40; //How many bytes into the packet we need to start
-	//OUR SYSTEM IS BIG ENDIAN
+	//network order is big endian, x86 is little endian
 	u_int64_t seconds = time / 1000;
 	u_int64_t milliseconds = time - seconds * 1000;  //for fractions of a second
 	u_int64_t fraction = milliseconds * 0x1000000000 / 1000;
@@ -238,7 +241,7 @@ int CompileTimeStamp(char* s, u_int64_t time)
  * with a port (if required)
  */
 /***************************************************/
-int BuildDataGram(char* datagram, u_int64_t* timeOfRequest, u_int64_t* systemTimeOfRequest)
+int BuildDataGram(unsigned char* datagram, u_int64_t* timeOfRequest, u_int64_t* systemTimeOfRequest)
 {
 	struct sysinfo si;
 	

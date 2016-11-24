@@ -35,10 +35,11 @@
 #define NTP_MODE_CLIENT 3
 #define NTP_VERSION 3
 
-#define TRANSMIT_TIME_OFFSET 40
-#define REFERENCE_TIME_OFFSET 16
+#define REFERENCE_TIME_OFFSET 16 //what we receive
 #define ORIGINATE_TIME_OFFSET 24
 #define RECEIVE_TIME_OFFSET 32
+
+#define TRANSMIT_TIME_OFFSET 40 //what we send
 #define OFFSET_1900_TO_1970 ((uint64_t)((365 * 70) + 17) * 24 * 60 * 60)
 */
 
