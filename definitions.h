@@ -3,8 +3,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> 	//memeset
 
 #include <netinet/ip.h> //Declarations for IP header
+#include <sys/sysinfo.h>//sysinfo.uptime = seconds since boot
 
 //For more see http://www.timetools.co.uk/2013/07/25/ntp-server-uk/
 //stratum 1
@@ -35,15 +37,6 @@
 #define SERIND 32 //Time Server received datagram
 #define TRAIND 40 //Time datagram departed client/server
 
-uint64_t CurrentTimems();
-int CompileTimeStamp(unsigned char* s, uint64_t time);
-int TimeSendOut( uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
-int BuildDataGram(unsigned char* datagram, uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
-
-int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp);
-int HandleDatagram(long long* Datagram, uint64_t timeOfRequest, uint64_t sysReqTime);
-int SortTime();
-
 struct timeStamps
 {
 	uint64_t _referenceTimeClient;
@@ -52,6 +45,7 @@ struct timeStamps
     uint64_t _systemTimeSend; //NOT TO BE SENT USED FOR REFERENCE!
 
     uint64_t _systemTimeReceive; //NOT TO BE SENT USED FOR REFERENCE!
+
 	uint64_t _referenceTimeServer; //maybe relevant for server?
 	uint64_t _originateTimeServer; //Shouldn't change, must remove
 	uint64_t _receivedTimeServer; 
@@ -75,5 +69,14 @@ struct datagram
 	uint64_t _recTime;
 	uint64_t _traTime;
 };
+
+uint64_t CurrentTimeus();
+int CompileTimeStamp(unsigned char* s, uint64_t time);
+int TimeSendOut( uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
+int BuildDataGram(unsigned char* datagram, uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
+int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp);
+uint64_t htonll(uint64_t temp64);
+uint64_t ntohll(uint64_t temp64);
+int DatagramInit(struct datagram *dataSend, struct datagram *dataRec, struct timeStamps *ts);
 
 #endif/*__MYSTRUCTS_H__*/

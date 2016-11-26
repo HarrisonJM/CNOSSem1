@@ -5,7 +5,7 @@
             "name": "C++ Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/harrym/Assignments/CNOSSem1/NTPClient.out",
+            "program": "${workspaceRoot}/NTPClient.out",
             "preLaunchTask": "gcc",
             "args": [],
             "stopAtEntry": false,

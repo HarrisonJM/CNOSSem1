@@ -47,8 +47,7 @@ int main()
 	{
 		strcpy(buf, "");
 
-		if((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, 
-			(struct sockaddr *)&their_addr, &addr_len)) == -1)
+		if((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
 		{
 			perror("Listener recvfrom");
 			exit(1);

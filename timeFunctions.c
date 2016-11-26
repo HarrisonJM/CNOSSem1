@@ -1,4 +1,5 @@
 #include "definitions.h"
+#include <math.h>
 
 /***************************************************/
 //Name:
@@ -43,14 +44,14 @@ int CompileTimeStamp(unsigned char* s, uint64_t time)
 //Returns: uint64_t milliseconds since EPOCH
 //Description:
 /*
- * Retrieves system time since EPOCH and converts
- * into milliseconds
+ * Retrives time, calculates time in milliseconds
  */
 /***************************************************/
-uint64_t CurrentTimems()
+uint64_t CurrentTimeus()
 {
 	struct timeval tv;
 	uint64_t seconds;
+	uint64_t millis;
 	uint64_t microseconds;
 
 	if(gettimeofday(&tv, NULL) == -1) //TZ obselote. should just be NULL
@@ -58,26 +59,41 @@ uint64_t CurrentTimems()
 		perror("Client: Error in retrieveing time of day.");
 		exit(1);
 	}
-
-	/*TV conatains both seconds an micro seconds since EPOCH.
+	/*TV conatains both seconds an micro seconds since UNIX.
 	  So both must be converted into a proper format*/
-	seconds = (uint64_t) tv.tv_sec * 1000;
-	microseconds  = tv.tv_usec + (seconds * 1000); //divison creates remainders
+	millis = (uint64_t) (tv.tv_sec * 1000 + NTPEPOCH) + floor(tv.tv_usec / 1000); // caculate milliseconds
+	microseconds = round ((uint64_t)millis * 100000000 / 1000);
+
+	microseconds = htonll(microseconds);
 
 	return microseconds;
 }
 
 /***************************************************/
-//Name: 
-//Parameters: 
-//Returns:
+//Name: TimeStampsReceived
+//Parameters: struct timeStamps, struct datagram*
+//Returns: int
 //Description:
 /* 
- * Turns the timestamp into a machien readable format for later processing
+ * Converts received 64bit timestamps into little format.
+ * 
  */
 /***************************************************/
-int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp)
+//int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp)
+int TimeStampsReceived(struct timeStamps *ts, struct datagram dg)
 {
+	//datagram
+	uint64_t _refTime;
+	uint64_t _oriTime;
+	uint64_t _recTime;
+	uint64_t _traTime;
+
+	//timestamps
+	uint64_t _referenceTimeServer; //maybe relevant for server?
+	uint64_t _originateTimeServer; //Shouldn't change, must remove
+	uint64_t _receivedTimeServer; 
+	uint64_t _transmiteTimeServer;
+
 
 }
 
