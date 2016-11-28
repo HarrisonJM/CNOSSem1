@@ -38,7 +38,9 @@ int main(int argc, char * argv[])
 	uint32_t temp32[3];
 	int sockfd, numbytes, addr_len;
 	unsigned char datagramBody[MAXDATASIZE]; /* This is the body of the Datagram*/
-	char datagramRec[MAXDATASIZE];
+	unsigned char datagramRec[MAXDATASIZE];
+
+	char dateprinter[DATETIMESIZE];
 	
 	//argc = number of arguments including program ("$talker localhost hello" would be 3)
 	//argv = argumments, indexed by +1 because of program name
@@ -72,7 +74,7 @@ int main(int argc, char * argv[])
 	// BuildDataGram(datagramBody, &timeOfRequest, &sysReqTime);
 	memset(&dataSend, 0, sizeof(dataSend)); 			/* zero struct*/
 	memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct*/
-	DatagramInit(&dataSend, &dataRec, &ts);
+	DatagramInit(&dataSend, &ts);
 
 	//if((numbytes = sendto(sockfd, datagramBody, sizeof(datagramBody), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
 	if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
@@ -96,12 +98,12 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	//FixTimeStamp(datagramRec)
-	
+	TimeStampsReceived(&ts, &dataRec);	
 	
 
-	printf("A datagram has been received of %dB", numbytes);
-	//printf("Time is: %s\n", );
+	printf("A datagram has been received of %dB\n", numbytes);
+	printf("Rec traTime is: %lld\n", dataRec._traTime);
+	printf("send traTime is: %lld\n", dataSend._traTime);
 
 // converted value =	15844202236296161788 (transmit time);
 // receive time =		15834924222727709147

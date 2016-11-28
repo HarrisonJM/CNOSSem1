@@ -32,8 +32,17 @@ int BuildDataGram(unsigned char* datagram, uint64_t *timeOfRequest, uint64_t *sy
 	return 0;
 }
 
-
-int DatagramInit(struct datagram *dataSend, struct datagram* dataRec, struct timeStamps *ts)
+/***************************************************/
+//Name: DatagramInit
+//Parameters: struct datagram*, struct timeStamps*
+//Returns: 0
+//Description:
+/* 
+ * Compiles datagram to send to NTP server
+ * also populates beginning of the tiemmstamp struct
+ */
+/***************************************************/
+int DatagramInit(struct datagram *dataSend, struct timeStamps *ts)
 {
 	struct sysinfo *si;
 
@@ -42,12 +51,13 @@ int DatagramInit(struct datagram *dataSend, struct datagram* dataRec, struct tim
 	dataSend->_mode = dataSend->_mode | CLIENTMODE;
 	//1482341983394
 
-	dataSend->_traTime = dataSend->_oriTime = //continued on next line
-	ts->_transmitTimeClient = ts->_originateTimeClient = 
+	ts->_transmitTimeClient = ts->_originateTimeClient = CurrentTimeus();
+	dataSend->_traTime = dataSend->_oriTime = htonll(ts->_transmitTimeClient);
 
 	sysinfo(si);
 	ts->_systemTimeSend = si->uptime;
 
+	return 0;
 }
 
 /***************************************************/

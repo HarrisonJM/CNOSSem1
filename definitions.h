@@ -23,9 +23,7 @@
 
 //DataGram Information
 #define MAXDATASIZE 48 //bytes
-//#define VNNUMBER 4
 #define VNNUMBER 0b010
-//#define CLIENTMODE 3
 #define CLIENTMODE 0b110
 
 #define NTPEPOCH ((uint64_t)((365 * 70) + 17) * 24 * 60 * 60)
@@ -37,17 +35,18 @@
 #define SERIND 32 //Time Server received datagram
 #define TRAIND 40 //Time datagram departed client/server
 
+#define DATETIMESIZE 26
+
 struct timeStamps
 {
-	uint64_t _referenceTimeClient;
+	//uint64_t _referenceTimeClient;
 	uint64_t _originateTimeClient;
 	uint64_t _transmitTimeClient;
-    uint64_t _systemTimeSend; //NOT TO BE SENT USED FOR REFERENCE!
 
+    uint64_t _systemTimeSend; //NOT TO BE SENT USED FOR REFERENCE!
     uint64_t _systemTimeReceive; //NOT TO BE SENT USED FOR REFERENCE!
 
 	uint64_t _referenceTimeServer; //maybe relevant for server?
-	uint64_t _originateTimeServer; //Shouldn't change, must remove
 	uint64_t _receivedTimeServer; 
 	uint64_t _transmiteTimeServer;
 
@@ -77,6 +76,6 @@ int BuildDataGram(unsigned char* datagram, uint64_t* timeOfRequest, uint64_t* sy
 int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp);
 uint64_t htonll(uint64_t temp64);
 uint64_t ntohll(uint64_t temp64);
-int DatagramInit(struct datagram *dataSend, struct datagram *dataRec, struct timeStamps *ts);
+int DatagramInit(struct datagram *dataSend, struct timeStamps *ts);
 
 #endif/*__MYSTRUCTS_H__*/

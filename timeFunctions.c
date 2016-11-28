@@ -1,6 +1,23 @@
 #include "definitions.h"
 #include <math.h>
 
+/*
+
+	CLOCK SYNC ALGORITHMS:
+	theta, offset 
+	theta = ((T1 - T0) + (T2 - T3)) / 2
+	t0 = time sent out (sysinfo()) _systemTimeSend
+	t1 = server received _recTime, _receivedTimeServer
+	t2 = server sent _traTime, _transmiteTimeServer
+	t3 = client reception, _systemTimeReceive
+
+	delta, tound trip delay
+	delta = (t3 - t0) - (t2 - t1)
+
+
+
+*/
+
 /***************************************************/
 //Name:
 //Parameters: char* s, uint64_t time
@@ -44,7 +61,7 @@ int CompileTimeStamp(unsigned char* s, uint64_t time)
 //Returns: uint64_t milliseconds since EPOCH
 //Description:
 /*
- * Retrives time, calculates time in milliseconds
+ * Retrives time, calculates time in microseconds
  */
 /***************************************************/
 uint64_t CurrentTimeus()
@@ -59,15 +76,15 @@ uint64_t CurrentTimeus()
 		perror("Client: Error in retrieveing time of day.");
 		exit(1);
 	}
+
+	millis = (tv.tv_sec  + NTPEPOCH) * 1000;
+	microseconds = tv.tv_usec + millis * 1000;
 	/*TV conatains both seconds an micro seconds since UNIX.
 	  So both must be converted into a proper format*/
-	millis = (uint64_t) (tv.tv_sec * 1000 + NTPEPOCH) + floor(tv.tv_usec / 1000); // caculate milliseconds
-	microseconds = round ((uint64_t)millis * 100000000 / 1000);
-
-	microseconds = htonll(microseconds);
 
 	return microseconds;
 }
+
 
 /***************************************************/
 //Name: TimeStampsReceived
@@ -80,19 +97,21 @@ uint64_t CurrentTimeus()
  */
 /***************************************************/
 //int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp)
-int TimeStampsReceived(struct timeStamps *ts, struct datagram dg)
-{
-	//datagram
-	uint64_t _refTime;
-	uint64_t _oriTime;
-	uint64_t _recTime;
-	uint64_t _traTime;
+int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg)
+{ //TODO: WE ARE NOW HERE!!!!
+	
+	struct sysinfo *si;
+	sysinfo(si);	
+	ts->_systemTimeReceive = si->uptime;
 
-	//timestamps
 	uint64_t _referenceTimeServer; //maybe relevant for server?
 	uint64_t _originateTimeServer; //Shouldn't change, must remove
 	uint64_t _receivedTimeServer; 
 	uint64_t _transmiteTimeServer;
+
+	ts->_referenceTimeServer = ntohll(dg->_refTime);
+	ts->_receivedTimeServer = ntohll(dg->_oriTime);
+	ts->_transmiteTimeServer = ntohll(dg->_traTime);
 
 
 }
@@ -139,5 +158,16 @@ uint64_t readTimeStamp(char *buffer, int offset)
     uint32_t fraction = read32(buffer, offset + 4);
     uint64_t v = ((int64_t)seconds - NTPEPOCH) * 1000 +
     (int64_t) fraction * 1000 / (int64_t) 0x100000000;
+
     return v;
 }
+
+/***************************************************/
+//Name: 
+//Parameters: 
+//Returns:
+//Description:
+/* 
+ * 
+ */
+/***************************************************/
