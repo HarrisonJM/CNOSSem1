@@ -31,8 +31,7 @@ int main(int argc, char * argv[])
 	struct hostent *he; /* host entity */
 	struct sockaddr_in their_addr; /* server address info */
 	struct timeStamps ts; /*Holds time stamps*/
-	struct datagram dataSend, dataRec; /* Our datagrams*/
-	struct sysinfo si;
+	struct datagram dataRec, dataSend; /* Our datagrams */
 
 	uint64_t timeOfRequest, sysReqTime, temp64;
 	uint32_t temp32[3];
@@ -102,11 +101,13 @@ int main(int argc, char * argv[])
 	
 
 	printf("A datagram has been received of %dB\n", numbytes);
-	printf("Rec traTime is: %lld\n", dataRec._traTime);
-	printf("send traTime is: %lld\n", dataSend._traTime);
+	printf("Rec traTime is: %l.%l\n", dataRec._traTimeSeconds, dataRec._traTimeMicro);
+	printf("send traTime is: %l.%l\n", dataSend._traTimeSeconds, dataSend._traTimeMicro);
 
 // converted value =	15844202236296161788 (transmit time);
 // receive time =		15834924222727709147
+
+//should be ~1480388148 = seconds
 
 	close(sockfd);
 	getchar();

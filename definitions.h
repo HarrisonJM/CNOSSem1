@@ -39,18 +39,51 @@
 
 struct timeStamps
 {
-	//uint64_t _referenceTimeClient;
-	uint64_t _originateTimeClient;
-	uint64_t _transmitTimeClient;
+	// //uint64_t _referenceTimeClient;
+	// uint64_t _originateTimeClientSec;
+	// uint64_t _transmitTimeClientSec;
 
-    uint64_t _systemTimeSend; //NOT TO BE SENT USED FOR REFERENCE!
-    uint64_t _systemTimeReceive; //NOT TO BE SENT USED FOR REFERENCE!
+    // uint64_t _systemTimeSendSec; //NOT TO BE SENT USED FOR REFERENCE!
+    // uint64_t _systemTimeReceive; //NOT TO BE SENT USED FOR REFERENCE!
 
-	uint64_t _referenceTimeServer; //maybe relevant for server?
-	uint64_t _receivedTimeServer; 
-	uint64_t _transmiteTimeServer;
+	// uint64_t _referenceTimeServer; //maybe relevant for server?
+	// uint64_t _receivedTimeServer; 
+	// uint64_t _transmiteTimeServer;
+
+		//uint64_t _referenceTimeClient;
+	uint32_t _originateTimeClientSec;
+	uint32_t _originateTimeClientFraction;
+	uint32_t _transmitTimeClientSec;
+	uint32_t _transmitTimeClientFraction;
+
+    uint32_t _systemTimeSend; //NOT TO BE SENT USED FOR REFERENCE!
+    uint32_t _systemTimeReceive; //NOT TO BE SENT USED FOR REFERENCE!
+
+	uint32_t _referenceTimeServerSec; //maybe relevant for server?
+	uint32_t _referenceTimeServerRec; //maybe relevant for server?
+	uint32_t _receivedTimeServerSec;
+	uint32_t _receivedTimeServerRec;  
+	uint32_t _transmiteTimeServerSec;
+	uint32_t _transmiteTimeServerRec;
 
 };
+
+// struct datagram
+// {
+// 	uint8_t _LI : 2;
+// 	uint8_t _VN : 3;
+// 	uint8_t _mode : 3;
+// 	uint8_t _stratum;
+// 	uint8_t _poll;
+// 	uint8_t _precision;
+// 	uint32_t _rootDelay;
+// 	uint32_t _rootDispersion;
+// 	uint32_t _refIdent;
+// 	uint64_t _refTime;
+// 	uint64_t _oriTime;
+// 	uint64_t _recTime;
+// 	uint64_t _traTime;
+// };
 
 struct datagram
 {
@@ -63,13 +96,17 @@ struct datagram
 	uint32_t _rootDelay;
 	uint32_t _rootDispersion;
 	uint32_t _refIdent;
-	uint64_t _refTime;
-	uint64_t _oriTime;
-	uint64_t _recTime;
-	uint64_t _traTime;
+	uint32_t _refTimeSeconds;
+	uint32_t _refTimeMicro; //fraction
+	uint32_t _oriTimeSeconds;
+	uint32_t _oriTimeMicro;
+	uint32_t _recTimeSeconds;
+	uint32_t _recTimeMicro;
+	uint32_t _traTimeSeconds;
+	uint32_t _traTimeMicro;
 };
 
-uint64_t CurrentTimeus();
+uint64_t CurrentTimems();
 int CompileTimeStamp(unsigned char* s, uint64_t time);
 int TimeSendOut( uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
 int BuildDataGram(unsigned char* datagram, uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);

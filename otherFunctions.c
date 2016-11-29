@@ -45,17 +45,21 @@ int BuildDataGram(unsigned char* datagram, uint64_t *timeOfRequest, uint64_t *sy
 int DatagramInit(struct datagram *dataSend, struct timeStamps *ts)
 {
 	struct sysinfo *si;
+	struct timeval tv;
 
 	//dataSend->_VN = dataSend._VN | VNNUMBER;
 	dataSend->_VN = dataSend->_VN | VNNUMBER;
 	dataSend->_mode = dataSend->_mode | CLIENTMODE;
-	//1482341983394
+	//1482341983394	
 
-	ts->_transmitTimeClient = ts->_originateTimeClient = CurrentTimeus();
-	dataSend->_traTime = dataSend->_oriTime = htonll(ts->_transmitTimeClient);
+	//ts->_transmitTimeClientSec = ts->_originateTimeClientSec = CurrentTimems();
+	//dataSend->_traTime = dataSend->_oriTime = htonll(ts->_transmitTimeClientSec);
+	
+	ts->_transmitTimeClientSec = ts->_originateTimeClientSec = tv.uptime;
+	dataSend->_traTimeSeconds = dataSend->_oriTimeMicro = htonll(ts->_transmitTimeClientSec);
 
 	sysinfo(si);
-	ts->_systemTimeSend = si->uptime;
+	ts->_systemTimeSendSec = si->uptime;
 
 	return 0;
 }

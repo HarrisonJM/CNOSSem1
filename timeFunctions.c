@@ -6,9 +6,9 @@
 	CLOCK SYNC ALGORITHMS:
 	theta, offset 
 	theta = ((T1 - T0) + (T2 - T3)) / 2
-	t0 = time sent out (sysinfo()) _systemTimeSend
-	t1 = server received _recTime, _receivedTimeServer
-	t2 = server sent _traTime, _transmiteTimeServer
+	t0 = time sent out (sysinfo()) _systemTimeSendSec
+	t1 = server received _recTime, _receivedTimeServerSec
+	t2 = server sent _traTime, _transmiteTimeServerSec
 	t3 = client reception, _systemTimeReceive
 
 	delta, tound trip delay
@@ -64,7 +64,7 @@ int CompileTimeStamp(unsigned char* s, uint64_t time)
  * Retrives time, calculates time in microseconds
  */
 /***************************************************/
-uint64_t CurrentTimeus()
+uint64_t CurrentTimems()
 {
 	struct timeval tv;
 	uint64_t seconds;
@@ -104,14 +104,14 @@ int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg)
 	sysinfo(si);	
 	ts->_systemTimeReceive = si->uptime;
 
-	uint64_t _referenceTimeServer; //maybe relevant for server?
+	uint64_t _referenceTimeServerSec; //maybe relevant for server?
 	uint64_t _originateTimeServer; //Shouldn't change, must remove
-	uint64_t _receivedTimeServer; 
-	uint64_t _transmiteTimeServer;
+	uint64_t _receivedTimeServerSec; 
+	uint64_t _transmiteTimeServerSec;
 
-	ts->_referenceTimeServer = ntohll(dg->_refTime);
-	ts->_receivedTimeServer = ntohll(dg->_oriTime);
-	ts->_transmiteTimeServer = ntohll(dg->_traTime);
+	ts->_referenceTimeServerSec = ntohll(dg->_refTime);
+	ts->_receivedTimeServerSec = ntohll(dg->_oriTime);
+	ts->_transmiteTimeServerSec = ntohll(dg->_traTime);
 
 
 }
