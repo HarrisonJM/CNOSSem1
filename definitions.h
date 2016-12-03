@@ -107,6 +107,8 @@ uint64_t ntohll(uint64_t temp64);
 
 int DatagramInit(struct datagram *dataSend, struct timeStamps *ts);
 
+void gettimeofdaysmall(struct timeval *tv);
+
 int HandleDatagram(struct timeStamps *ts, struct datagram *ds, 
 					struct timeval *offset, struct timeval *delay);
 int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg);

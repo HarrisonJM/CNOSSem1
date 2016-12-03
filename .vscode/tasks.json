@@ -4,6 +4,6 @@
     "version": "0.1.0",
     "command": "gcc",
     "isShellCommand": true,
-    "args": ["-g", "client.c", "-Wall","timeFunctions.c", "dataGramFunctions.c","-lm", "-o", "NTPClient.out"],
+    "args": ["-g", "client.c", "-Wall","timeFunctions.c", "datagramFunctions.c", "argumenthandling.c", "-lm", "-o", "NTPClient.out"],
     "showOutput": "always"
 }
