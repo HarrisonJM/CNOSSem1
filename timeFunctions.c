@@ -1,89 +1,8 @@
 #include "definitions.h"
-#include <math.h>
-
-/*
-
-	CLOCK SYNC ALGORITHMS:
-	theta, offset 
-	theta = ((T1 - T0) + (T2 - T3)) / 2
-	t0 = time sent out (sysinfo()) _systemTimeSendSec
-	t1 = server received _recTime, _receivedTimeServerSec
-	t2 = server sent _traTime, _transmiteTimeServerSec
-	t3 = client reception, _systemTimeReceive
-
-	delta, tound trip delay
-	delta = (t3 - t0) - (t2 - t1)
 
 
-
-*/
-
-/***************************************************/
-//Name:
-//Parameters: char* s, uint64_t time
-//Returns: -
-//Description:
-/*
- * Writes the timestamp from the system into the
- * message to send to the server. Also deals with
- * EPOCH and little -> big endian
- */
-/***************************************************/
-int CompileTimeStamp(unsigned char* s, uint64_t time)
-{
-	int index = 40; //How many bytes into the packet we need to start
-	
-	uint64_t seconds = time / 1000;
-	uint64_t milliseconds = time - seconds * 1000;  //for fractions of a second
-	uint64_t fraction = milliseconds * 0x1000000000 / 1000;
-
-	seconds += NTPEPOCH; //ADD SECONDS SINCE 1900
-
-	//network order is big endian, x86 is little endian
-	s[index++] = (char)seconds >> 24; //S is a char*, each element is a char
-	s[index++] = (char)seconds >> 16;
-	s[index++] = (char)seconds >> 8;
-	s[index++] = (char)seconds >> 0;
-
-	//need to write fractions of a second in aswell
-	s[index++] = (char)fraction >> 24;
-	s[index++] = (char)fraction >> 16;
-	s[index++] = (char)fraction >> 8;
-
-	s[index++] = 0;
-
-	return 0;
-}
-
-/***************************************************/
-//Name: currentTimems()
-//Parameters: -
-//Returns: uint64_t milliseconds since EPOCH
-//Description:
-/*
- * Retrives time, calculates time in microseconds
- */
-/***************************************************/
-uint64_t CurrentTimems()
-{
-	struct timeval tv;
-	uint64_t seconds;
-	uint64_t millis;
-	uint64_t microseconds;
-
-	if(gettimeofday(&tv, NULL) == -1) //TZ obselote. should just be NULL
-	{
-		perror("Client: Error in retrieveing time of day.");
-		exit(1);
-	}
-
-	millis = (tv.tv_sec  + NTPEPOCH) * 1000;
-	microseconds = tv.tv_usec + millis * 1000;
-	/*TV conatains both seconds an micro seconds since UNIX.
-	  So both must be converted into a proper format*/
-
-	return microseconds;
-}
+int FindMonth(int *day, int leap);
+int FindDayInMonth(int month, int day, int dayinyear, int leap);
 
 
 /***************************************************/
@@ -92,82 +11,229 @@ uint64_t CurrentTimems()
 //Returns: int
 //Description:
 /* 
- * Converts received 64bit timestamps into little format.
  * 
  */
 /***************************************************/
 //int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp)
 int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg)
 { //TODO: WE ARE NOW HERE!!!!
+
+	ts->_referenceTimeServerSec = ntohl(dg->_refTimeSeconds)  - NTPEPOCH;
+	ts->_referenceTimeServerMic = ntohl(dg->_refTimeMicro);
+
+	ts->_receivedTimeServerSec = ntohl(dg->_recTimeSeconds)  - NTPEPOCH;
+	ts->_receivedTimeServerMic = ntohl(dg->_recTimeMicro);
+
+	ts->_transmitTimeServerSec = ntohl(dg->_traTimeSeconds) - NTPEPOCH;
+	ts->_transmitTimeServerMic = ntohl(dg->_traTimeMicro);
 	
-	struct sysinfo *si;
-	sysinfo(si);	
-	ts->_systemTimeReceive = si->uptime;
-
-	uint64_t _referenceTimeServerSec; //maybe relevant for server?
-	uint64_t _originateTimeServer; //Shouldn't change, must remove
-	uint64_t _receivedTimeServerSec; 
-	uint64_t _transmiteTimeServerSec;
-
-	ts->_referenceTimeServerSec = ntohll(dg->_refTime);
-	ts->_receivedTimeServerSec = ntohll(dg->_oriTime);
-	ts->_transmiteTimeServerSec = ntohll(dg->_traTime);
-
-
+	return 0;
 }
 
-/***************************************************/
-//Name:
-//Parameters: 
-//Returns:
-//Description:
-/* 
- * TODO: WRITE MY OWN!!!
- */
-/***************************************************/
-uint32_t read32(char* buffer, int offset)
+
+int CalculateOffset(struct timeStamps *ts, struct timeval *offset)
 {
-    char b0 = buffer[offset];
-    char b1 = buffer[offset+1];
-    char b2 = buffer[offset+2];
-    char b3 = buffer[offset+3];
+	uint32_t T1T0;
+	uint32_t T2T3;
 
-    // convert signed bytes to unsigned values
-    uint32_t i0 = ((b0 & 0x80) == 0x80 ? (b0 & 0x7F) + 0x80 : b0);
-    uint32_t i1 = ((b1 & 0x80) == 0x80 ? (b1 & 0x7F) + 0x80 : b1);
-    uint32_t i2 = ((b2 & 0x80) == 0x80 ? (b2 & 0x7F) + 0x80 : b2);
-    uint32_t i3 = ((b3 & 0x80) == 0x80 ? (b3 & 0x7F) + 0x80 : b3);
+	T1T0 = ts->_transmitTimeClientSec - ts->_receivedTimeServerSec;
+	T2T3 = ts->_transmitTimeServerSec - ts->_systemTimeReceive;
 
-    
-    uint32_t v = (i0 << 24) + (i1 << 16) + (i2 << 8) + i3;
-    return v;
+	offset->tv_sec = (T1T0 + T2T3) / 2; 
+
+	T1T0 = ts->_transmitTimeClientMic - ts->_receivedTimeServerMic;
+	T2T3 = ts->_transmitTimeServerMic; //assume microseconds is 0
+
+	offset->tv_usec = (T1T0 + T2T3) / 2;
+
+	return 0;
 }
 
-/***************************************************/
-//Name: 
-//Parameters: 
-//Returns:
-//Description:
-/* 
- * 
- */
-/***************************************************/
-uint64_t readTimeStamp(char *buffer, int offset)
+int CaluclateDelay(struct timeStamps *ts, struct timeval *delay)
 {
-    uint32_t seconds  = read32(buffer, offset);
-    uint32_t fraction = read32(buffer, offset + 4);
-    uint64_t v = ((int64_t)seconds - NTPEPOCH) * 1000 +
-    (int64_t) fraction * 1000 / (int64_t) 0x100000000;
+	int32_t T3T0;
+	int32_t T2T1;
 
-    return v;
+	//All numbers have EPOCH and endian accounted for
+	T3T0 = ts->_systemTimeReceive - ts->_transmitTimeClientSec;
+	T2T1 = ts->_transmitTimeServerSec - ts->_receivedTimeServerSec;
+
+	delay->tv_sec = T3T0 - T2T1;
+
+	T3T0 = 0 - ts->_transmitTimeClientMic;
+	T2T1 = ts->_transmitTimeServerMic - ts->_receivedTimeServerMic;
+
+	delay->tv_usec = abs(T3T0 - T2T1);
+	
+	return 0;
 }
 
-/***************************************************/
-//Name: 
-//Parameters: 
-//Returns:
-//Description:
-/* 
- * 
- */
-/***************************************************/
+void PrintDateAndTime(struct timeStamps *ts, struct datagram *ds, struct timeval offset, struct timeval delay)
+{
+ 	uint32_t microseconds = ts->_transmitTimeServerMic;
+	uint32_t milliseconds = microseconds / 1000;
+	uint32_t seconds = (ts->_transmitTimeServerSec);// + microseconds/1000000;
+	uint32_t minutes = seconds/60;
+	uint32_t hours = minutes/60;
+ 	uint32_t days = hours/24;
+ 	uint32_t years = days/365; //current year
+
+	int leapyear = (1970 + years) % 4; //if 0 leap year 
+	int numLeapYears = ((1970 + years) / 4) - (1970 /4) - 2; //number of leap years
+
+	int dayinyear = (days - (years* 365)) - numLeapYears; // - numLeapYears; //the current day in the year
+	int temp = dayinyear;
+	int month = FindMonth(&dayinyear, leapyear);
+	int dayinmonth = FindDayInMonth(month, abs(dayinyear), temp, leapyear);
+
+	uint32_t hourstoprint = hours - (days * 24);
+	uint32_t minutestoprint = minutes - (hours * 60);
+	uint32_t secondstoprint = seconds - (minutes * 60);
+	uint32_t millisecondstoprint = milliseconds - (seconds * 1000);
+
+	//      yy-mm-dd       hh:mm:ss.fs          offset          errorbound
+	printf("%04d-%02d-%02d ", 1970+years, month, dayinmonth); 
+	printf("%02d:%02d:%02d.%.6d ", (int)hourstoprint, (int)minutestoprint, (int)secondstoprint, (int)millisecondstoprint); 
+	printf("%01lld.%.6lld +/-%lld.%.6lld ", (long long)offset.tv_sec, (long long)offset.tv_usec, (long long)delay.tv_sec, (long long)delay.tv_usec);
+
+	return;
+}
+
+int FindMonth(int *day, int leap)
+{
+	int month = 0;
+	int i;
+
+	for(i = 1; i < 13; ++i)
+	{
+		switch(i)
+		{
+			case 1:
+				*day -= 31; //january
+				month++;
+				break;
+			case 2:
+				if(leap == 0)
+				{
+					*day -= 29;
+				}
+				else
+				{
+					*day -= 28; //February
+				}
+				month++;
+				break;
+			case 3:
+				*day -= 31; //March
+				month++;
+				break;
+			case 4:
+				*day -= 30; //April
+				month++;
+				break;
+			case 5:
+				*day -= 31; //may
+				month++;
+				break;
+			case 6:
+				*day -= 30; //june
+				month++;
+				break;
+			case 7:
+				*day -= 31; //july
+				month++;
+				break;				
+			case 8:
+				*day -= 31; //August
+				month++;
+				break;
+			case 9:
+				*day -= 30; //September
+				month++;
+				break;
+			case 10:
+				*day -= 31; //October
+				month++;
+				break;
+			case 11:
+				*day -= 30; //November
+				month++;
+				break;
+			case 12:
+				*day -= 31; //December
+				month++;
+				break;
+		}
+
+		if(*day <= 0)
+		{
+			return month;
+		}
+	}
+
+	return -1;
+}
+
+int FindDayInMonth(int month, int day, int dayinyear, int leap)
+{
+	/*
+		29 = day
+		337 = dayinyear
+		366
+	*/
+	int days;
+
+	switch(month)
+	{
+		case 1: //January
+		days = 31 - day; 
+		break;
+		case 2: //FEbruary
+			if(leap == 0)
+			{
+				days = 29 - day;
+			}
+			else
+			{
+				days = 28 - day;
+			}
+		break;
+		case 3: //march
+		days = 31 - day;
+		break;
+		case 4: //april
+		days = 30 - day;
+		break;
+		case 5: //may
+		days = 31 - day;
+		break;
+		case 6: //june
+		days = 30 - day;
+		break;
+		case 7: //july
+		days = 31 - day;
+		break;
+		case 8: //August
+		days = 31 - day;
+		break;
+		case 9: //September
+		days = 30 - day;
+		break;
+		case 10: //October
+		days = 31 - day;
+		break;
+		case 11: //November
+		days = 30 - day;
+		break;
+		case 12: //December
+		days = 31 - day;
+		break;
+	}
+
+	if (days == 0)
+	{
+		days = 1;
+	}
+
+	return days;
+}

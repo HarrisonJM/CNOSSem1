@@ -14,8 +14,6 @@
 #include <sys/types.h>  //u_int*_t
 #include <sys/socket.h>	//socket(), connect()
 #include <sys/ioctl.h>
-#include <sys/time.h>	//gettimeofday(struct timevall *tv, struct timezone *tz)
-//#include <sys/timex.h> //Seems to include values for deciding whether to set the system clock
 
 #include <netinet/in.h>	//struct sockaddr_in, htons()
 #include <netinet/udp.h>//Declarations for UDP header
@@ -32,26 +30,22 @@ int main(int argc, char * argv[])
 	struct sockaddr_in their_addr; /* server address info */
 	struct timeStamps ts; /*Holds time stamps*/
 	struct datagram dataRec, dataSend; /* Our datagrams */
+	struct timeval tv, timeout, offset, delay;
 
-	uint64_t timeOfRequest, sysReqTime, temp64;
-	uint32_t temp32[3];
-	int sockfd, numbytes, addr_len;
-	unsigned char datagramBody[MAXDATASIZE]; /* This is the body of the Datagram*/
-	unsigned char datagramRec[MAXDATASIZE];
-
-	char dateprinter[DATETIMESIZE];
+	int sockfd, numbytes;
 	
 	//argc = number of arguments including program ("$talker localhost hello" would be 3)
 	//argv = argumments, indexed by +1 because of program name
-	// if(argc < 2)
-	// {
-	// 	fprintf(stderr, "usage: $NTPClient <SNTP Server Address>\n");
-	// 	exit(1);
-	// }
+	if(argc < 2)
+	{
+		fprintf(stderr, "usage: $NTPClient <SNTP Server Address>\n");
+		printf("./NTPClient <NTP ADDRESSES (seperated by spaces)> -n<numberofserverstotry> -t<seconds>");
+		getchar();
+		exit(1);
+	}
 
 	/* resolve server host name or IP address */
-	//if((he = gethostbyname(argv[1])) == NULL)
-	if((he = gethostbyname(NTPIPHOME2)) == NULL)
+	if((he = gethostbyname(argv[1])) == NULL)
 	{
 		perror("Client: Cannot get host by name");
 		getchar();
@@ -71,11 +65,10 @@ int main(int argc, char * argv[])
 	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
 
 	// BuildDataGram(datagramBody, &timeOfRequest, &sysReqTime);
-	memset(&dataSend, 0, sizeof(dataSend)); 			/* zero struct*/
+	memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct*/
 	memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct*/
 	DatagramInit(&dataSend, &ts);
 
-	//if((numbytes = sendto(sockfd, datagramBody, sizeof(datagramBody), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
 	if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
 	{ //sendto returns number of bytes sent
 		perror("Client: Error Sending Datagram");
@@ -83,13 +76,6 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	printf("Sent %d bytes to %s:%d\n", numbytes, inet_ntoa(their_addr.sin_addr), SNTPPort);
-
-	addr_len = sizeof(struct sockaddr);
-
-	/* receives Datagram*/
-	//if((numbytes = recvfrom(sockfd, datagramRec, sizeof(datagramRec), 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
-	//if((numbytes = recv(sockfd, datagramRec, sizeof(datagramRec), 0)) == -1) //TODO: recv not block with 'MSG_DONTWAIT' instead of 0. decide timeout
 	if((numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0)) == -1) //TODO: recv not block with 'MSG_DONTWAIT' instead of 0. decide timeout
 	{
 		perror("Client: Error Receiving Datagram");
@@ -97,17 +83,25 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	TimeStampsReceived(&ts, &dataRec);	
-	
+	gettimeofday(&tv, NULL);
 
-	printf("A datagram has been received of %dB\n", numbytes);
-	printf("Rec traTime is: %l.%l\n", dataRec._traTimeSeconds, dataRec._traTimeMicro);
-	printf("send traTime is: %l.%l\n", dataSend._traTimeSeconds, dataSend._traTimeMicro);
+	ts._systemTimeReceive = tv.tv_sec;
 
-// converted value =	15844202236296161788 (transmit time);
-// receive time =		15834924222727709147
+	HandleDatagram(&ts, &dataRec, &offset, &delay);
 
-//should be ~1480388148 = seconds
+	printf("NTP Server: ");
+	printf("%s %s Stratum: %d \n", he->h_name, inet_ntoa(their_addr.sin_addr), dataRec._stratum);
+
+	printf("Time is: ");
+	PrintDateAndTime(&ts, &dataRec, offset, delay);
+	if(dataRec._LI)
+	{
+		printf("Leap\n");
+	}
+	else
+	{
+		printf("No-leap\n");
+	}
 
 	close(sockfd);
 	getchar();
