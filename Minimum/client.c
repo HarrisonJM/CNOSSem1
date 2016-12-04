@@ -43,12 +43,13 @@ int main(int argc, char * argv[])
 	struct timeval tv, timeout, offset, delay;
 
 	int sockfd, numbytes;
+	int portNo;
 
 	//ArgHandler(argc, argv);
 
-	if(argc < 2)
+	if(argc < 3)
 	{
-		fprintf(stderr, "usage: $NTPClient <SNTP Server Address>\n");
+		fprintf(stderr, "usage: $NTPClient <SNTP Server Address> <port (type 123 for default)>\n");
 		getchar();
 		exit(1);
 	}
@@ -61,6 +62,9 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
+	//convert command line argument into an integer
+	portNo = atoi(argv[2]);
+
 	//Open our socket
 	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) //sockfd = file descriptor
 	{
@@ -72,7 +76,7 @@ int main(int argc, char * argv[])
 	//sets up host address struct
 	memset(&their_addr, 0, sizeof(their_addr)); 			/* zero struct*/
 	their_addr.sin_family = AF_INET;						/*...host byte order*/
-	their_addr.sin_port = htons(SNTPPort);					/*...short, netwk byte order*/
+	their_addr.sin_port = htons(portNo);					/*...short, netwk byte order*/
 	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
 
 	// BuildDataGram(datagramBody, &timeOfRequest, &sysReqTime);

@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "${workspaceRoot}/NTPClient.out",
             "preLaunchTask": "gcc",
-            "args": [],
+            "args": ["158.43.192.66", "123"],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "environment": [],
