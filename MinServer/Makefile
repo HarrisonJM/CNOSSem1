@@ -11,6 +11,6 @@ OBJ =  server.o argumenthandling.o datagramFunctions.o timeFunctions.o
 NTPServer: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
 
-#clean:
-#	rm -f *.o
+clean:
+	rm -f *.o
 
