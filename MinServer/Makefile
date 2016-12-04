@@ -8,7 +8,7 @@ OBJ =  server.o argumenthandling.o datagramFunctions.o timeFunctions.o
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLGAS)
 
-NTPClient: $(OBJ)
+NTPServer: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
 
 #clean:
