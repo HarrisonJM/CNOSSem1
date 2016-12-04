@@ -68,7 +68,8 @@ int CalculateOffset(struct timeStamps *ts, struct timeval *offset)
 	T1T0 = ts->_transmitTimeClientSec - ts->_receivedTimeServerSec;
 	T2T3 = ts->_transmitTimeServerSec - ts->_systemTimeReceive;
 
-	offset->tv_sec = (T1T0 + T2T3) / 2; 
+	//offset->tv_sec = (T1T0 + T2T3) / 2;
+	//off = ((double)T1T0 + (double)T2T3) / 2.0;
 
 	T1T0 = ts->_transmitTimeClientMic - ts->_receivedTimeServerMic;
 	T2T3 = ts->_transmitTimeServerMic; //assume microseconds is 0
@@ -139,10 +140,15 @@ void PrintDateAndTime(struct timeStamps *ts, struct datagram *ds, struct timeval
 	uint32_t secondstoprint = seconds - (minutes * 60);
 	uint32_t millisecondstoprint = milliseconds - (seconds * 1000);
 
+	double offdob = offset.tv_sec + ((double)offset.tv_usec / 1000000.0);
+	double deldob = delay.tv_sec + ((double)delay.tv_usec / 1000000.0);
+
 	//      yy-mm-dd       hh:mm:ss.fs          offset          errorbound
 	printf("%04d-%02d-%02d ", 1970+years, month, dayinmonth); 
-	printf("%02d:%02d:%02d.%.6d ", (int)hourstoprint, (int)minutestoprint, (int)secondstoprint, (int)millisecondstoprint); 
-	printf("%01lld.%.6lld +/-%lld.%.6lld ", (long long)offset.tv_sec, (long long)offset.tv_usec, (long long)delay.tv_sec, (long long)delay.tv_usec);
+	printf("%02d:%02d:%02d.%.6d ", (int)hourstoprint, (int)minutestoprint, (int)secondstoprint, (int)millisecondstoprint);
+	//printf("%01lld.%.6lld +/-%lld.%.6lld ", (long long)offset.tv_sec, (long long)offset.tv_usec, (long long)delay.tv_sec, (long long)delay.tv_usec);
+	printf("%f +/-%f ", offdob, deldob);
+
 
 	return;
 }

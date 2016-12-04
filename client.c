@@ -1,8 +1,17 @@
-/* client.c - a datagram 'client' (talker)
- * ned to supply host name/IPO and one word message,
- * e.g. talker localhost hello
- */
-// https://github.com/magicmonty/bash-git-prompt
+/****************************************************************************/
+/*********************************NTPClient**********************************/
+/****************************************************************************/
+/* Program Name: 		NTPClient											*/
+/* Version: 			0.5													*/
+/* Date started: 		15/11/16											*/
+/* Date last edited: 	03/12/16											*/
+/* Description:																*/
+/*				The program, when supplied with the address for an NTP		*/ 
+/*				server, prints the date, time, time offset, and roundtrip   */
+/*				delay. to the console.										*/
+/* 																			*/
+/****************************************************************************/
+/****************************************************************************/
 
 
 #include <time.h>		//Need to know the time
