@@ -30,6 +30,7 @@
 #define MAXDATASIZE 48 //bytes
 #define VNNUMBER 0b010
 #define CLIENTMODE 0b110
+#define SERVERMODE 0b010
 
 #define NTPEPOCH ((uint64_t)((365 * 70) + 17) * 24 * 60 * 60)
 #define NTPEPOCH2 (uint64_t)2208988800LL

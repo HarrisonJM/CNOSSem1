@@ -6,7 +6,7 @@
 /* Date started: 		15/11/16											*/
 /* Date last edited: 	03/12/16											*/
 /* Description:																*/
-/*				The program, when supplied with A Port to run on, opens a 
+/*				The program, when supplied with A Port to run on, opens a	*/ 
 /*				socket and waits for connections							*/
 /* 																			*/
 /****************************************************************************/
@@ -36,7 +36,7 @@
 int main(int argc, char * argv[])
 {
 	struct hostent *he; /* host entity */
-	struct sockaddr_in their_addr; /* server address info */
+	struct sockaddr_in their_addr my_addr; /* server address info */
 	struct timeStamps ts; /*Holds time stamps*/
 	struct datagram dataRec, dataSend; /* Our datagrams */
 	struct timeval tv, timeout, offset, delay;
@@ -64,11 +64,26 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
+	/* resolve server host name or IP address */
+	if((he = gethostbyname("127.0.0.1")) == NULL)
+	{
+			perror("Client: Cannot get host by name");
+			getchar();
+			exit(1);
+	}
+
     memset(&my_addr, 0, sizeof(my_addr));   /* zero struct*/
     my_addr.sin_family = AF_INET;           /* host byte order...*/
     my_addr.sin_port = htons(MYPORT);       /* ...short, net. byte order*/
     my_addr.sin_addr.s_addr = INADDR_ANY;   /* any of server IP addrs*/
 
+	memset(&their_addr, 0, sizeof(their_addr));                     /* zero struct*/
+	their_addr.sin_family = AF_INET;                                /*...host byte order*/
+	their_addr.sin_port = htons(portNo);                            /*...short, netwk byte order*/
+	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
+
+
+	//binds server to a port
     if(bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
 	{
         perror("Listener bind");
@@ -85,12 +100,24 @@ int main(int argc, char * argv[])
 		memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct */
 		memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct */
 
-		if((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
+		//receives datagram from client
+		//if((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
+		if((numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0)) == -1)
 		{
-			perror("Client: Error Receiving Datagram");
+			perror("SERVER: Error Receiving Datagram");
 			getchar();
 			exit(1);
 		}
+
+		//sends datagram to a server
+		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
+		{ //sendto returns number of bytes sent
+			perror("SERVER: Error Sending Datagram");
+			getchar();
+			exit(1);
+		}
+
+		printf("sent datagram to personal SNTP");
 
 		//Fills outs datagram to send back to client 
 		DatagramInit(&dataRec);
@@ -98,7 +125,7 @@ int main(int argc, char * argv[])
 		//sends datagram
 		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
 		{ //sendto returns number of bytes sent
-			perror("Client: Error Sending Datagram");
+			perror("SERVER: Error Sending Datagram");
 			getchar();
 			exit(1);
 		}
