@@ -9,7 +9,7 @@ OBJ =  client.o argumenthandling.o datagramFunctions.o timeFunctions.o
 	$(CC) -c -o $@ $< $(CFLGAS)
 
 NTPClient: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc -g -o $@ $^ $(CFLAGS)
 
 #clean:
 #	rm -f *.o

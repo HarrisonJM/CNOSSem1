@@ -9,7 +9,7 @@ OBJ =  server.o argumenthandling.o datagramFunctions.o timeFunctions.o
 	$(CC) -c -o $@ $< $(CFLGAS)
 
 NTPServer: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc -g -o $@ $^ $(CFLAGS)
 
 clean:
 	rm -f *.o

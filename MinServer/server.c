@@ -32,21 +32,22 @@
 
 #include "definitions.h"
 
+int ClientDatagram(struct datagram* client, struct datagram* server, struct timeval *tv);
 
 int main(int argc, char * argv[])
 {
 	struct hostent *he; /* host entity */
-	struct sockaddr_in their_addr my_addr; /* server address info */
+	struct sockaddr_in server_addr, client_addr, my_addr;  /* server address info */
 	struct timeStamps ts; /*Holds time stamps*/
 	struct datagram dataRec, dataSend; /* Our datagrams */
 	struct timeval tv, timeout, offset, delay;
 
-	int sockfd, numbytes;
+	int sockfd, numbytes, addrlen = sizeof(client_addr);
 	int portNo;
 
 	//ArgHandler(argc, argv);
 
-	if(argc < 3)
+	if(argc < 2)
 	{
 		fprintf(stderr, "usage: $NTPServer <port>\n");
 		getchar();
@@ -54,7 +55,7 @@ int main(int argc, char * argv[])
 	}
 
 	//convert command line argument into an integer
-	portNo = atoi(argv[2]);
+	portNo = atoi(argv[1]);
 
 	//Open our socket
 	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) //sockfd = file descriptor
@@ -65,93 +66,83 @@ int main(int argc, char * argv[])
 	}
 
 	/* resolve server host name or IP address */
-	if((he = gethostbyname("127.0.0.1")) == NULL)
+	if((he = gethostbyname("ntp.uwe.ac.uk")) == NULL)
 	{
 			perror("Client: Cannot get host by name");
 			getchar();
 			exit(1);
 	}
+	
+	//server address information 
+	memset(&server_addr, 0, sizeof(server_addr));
+	server_addr.sin_family = AF_INET;                             
+	server_addr.sin_port = htons(123);                        
+	server_addr.sin_addr = *((struct in_addr *)he -> h_addr); //FIX ME PLZ
 
-    memset(&my_addr, 0, sizeof(my_addr));   /* zero struct*/
-    my_addr.sin_family = AF_INET;           /* host byte order...*/
-    my_addr.sin_port = htons(MYPORT);       /* ...short, net. byte order*/
-    my_addr.sin_addr.s_addr = INADDR_ANY;   /* any of server IP addrs*/
-
-	memset(&their_addr, 0, sizeof(their_addr));                     /* zero struct*/
-	their_addr.sin_family = AF_INET;                                /*...host byte order*/
-	their_addr.sin_port = htons(portNo);                            /*...short, netwk byte order*/
-	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
-
+	memset(&my_addr, 0, sizeof(my_addr)); 	/* zero struct*/
+	my_addr.sin_family = AF_INET;		/* host byte order...*/
+	my_addr.sin_port = htons(portNo);	/* ...short, net. byte order*/
+	my_addr.sin_addr.s_addr = INADDR_ANY;	/* any of server IP addrs*/
 
 	//binds server to a port
-    if(bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
+	if(bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
 	{
         perror("Listener bind");
     	exit(1);
 	}
-
-	//Sets up the timeout for recv
-	//timeout.tv_sec = 5;
-	//timeout.tv_usec = 0;
-	//setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(struct timeval));
 
 	do
 	{	
 		memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct */
 		memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct */
 
+		printf("Waiting for packet\n");
+
 		//receives datagram from client
-		//if((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
-		if((numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0)) == -1)
+	        if ((numbytes = recvfrom(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*) &client_addr, &addrlen)) == -1)
 		{
 			perror("SERVER: Error Receiving Datagram");
 			getchar();
 			exit(1);
 		}
 
+		gettimeofday(&tv, NULL);
+
 		//sends datagram to a server
-		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
-		{ //sendto returns number of bytes sent
-			perror("SERVER: Error Sending Datagram");
+		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&server_addr, sizeof(struct sockaddr))) == -1)
+		{ 
+			perror("SERVER: Error Sending Datagram to server");
 			getchar();
 			exit(1);
 		}
+			
+		printf("sent datagram to personal SNTP\n");
+	
+		//receive datagram back from server	
+		numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
+	        if(numbytes == -1)
+	        {
+	                perror("Client: Error Receiving Datagram");
+                	getchar();
+        	        exit(1);
+	        }
 
-		printf("sent datagram to personal SNTP");
+		
+		ClientDatagram(&dataSend, &dataRec, &tv);
 
 		//Fills outs datagram to send back to client 
-		DatagramInit(&dataRec);
+		//DatagramInit(&dataRec);
 
-		//sends datagram
-		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
+		//sends datagram back to client
+		if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&client_addr, sizeof(struct sockaddr))) == -1)
 		{ //sendto returns number of bytes sent
 			perror("SERVER: Error Sending Datagram");
 			getchar();
 			exit(1);
 		}
 
-	} while(1)
-
-	gettimeofdaysmall(&tv);
-	ts._systemTimeReceive = tv.tv_sec;
-
-	HandleDatagram(&ts, &dataRec, &offset, &delay);
-
-	printf("NTP Server: ");
-	printf("%s %s Stratum: %d \n", he->h_name, inet_ntoa(their_addr.sin_addr), dataRec._stratum);
-
-	printf("Time is: ");
-	PrintDateAndTime(&ts, &dataRec, offset, delay);
-	if(dataRec._LI)
-	{
-		printf("Leap\n");
-	}
-	else
-	{
-		printf("No-leap\n");
-	}
+	} while(1);
 
 	close(sockfd);
-	getchar();
 	return 0;
 }

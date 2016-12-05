@@ -27,6 +27,36 @@ int DatagramInit(struct datagram *dataSend, struct timeStamps *ts)
 	return 0;
 }
 
+
+/***************************************************/
+//Name: 
+//Parameters:
+//Returns: 
+//Description:
+/* 
+ *  
+ *
+ */
+/***************************************************/
+int ClientDatagram(struct datagram* client, struct datagram* server, struct timeval *tv)
+{	
+	//NTP EPOCH!!!!!!!!!!!
+	client->_mode = 0b010;
+	client->_stratum = 0b110;
+
+	client->_oriTimeSeconds = client->_traTimeSeconds;
+	client->_oriTimeMicro = client->_traTimeMicro;
+
+	client->_refTimeSeconds = server->_refTimeSeconds;
+	client->_refTimeMicro = server->_refTimeMicro;
+
+	gettimeofday(tv, NULL);
+	
+	client->_traTimeSeconds = htonl(tv->tv_sec);
+	client->_traTimeMicro = htonl(tv->tv_usec);
+	
+}
+
 /***************************************************/
 //Name: HandleDatagram
 //Parameters: struct timeStamps*, struct datagram*, struct timeval*, struct timeval*
