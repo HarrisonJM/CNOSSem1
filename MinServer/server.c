@@ -1,14 +1,13 @@
 /****************************************************************************/
-/*********************************NTPClient**********************************/
+/*********************************NTPServer**********************************/
 /****************************************************************************/
-/* Program Name: 		NTPClient											*/
+/* Program Name: 		NTPServer											*/
 /* Version: 			0.5													*/
 /* Date started: 		15/11/16											*/
 /* Date last edited: 	03/12/16											*/
 /* Description:																*/
-/*				The program, when supplied with the address for an NTP		*/ 
-/*				server, prints the date, time, time offset, and roundtrip   */
-/*				delay. to the console.										*/
+/*				The program, when supplied with A Port to run on, opens a 
+/*				socket and waits for connections							*/
 /* 																			*/
 /****************************************************************************/
 /****************************************************************************/
@@ -49,15 +48,7 @@ int main(int argc, char * argv[])
 
 	if(argc < 3)
 	{
-		fprintf(stderr, "usage: $NTPClient <SNTP Server Address> <port (type 123 for default)>\n");
-		getchar();
-		exit(1);
-	}
-
-	/* resolve server host name or IP address */
-	if((he = gethostbyname(argv[1])) == NULL)
-	{
-		perror("Client: Cannot get host by name");
+		fprintf(stderr, "usage: $NTPServer <port>\n");
 		getchar();
 		exit(1);
 	}
@@ -73,52 +64,46 @@ int main(int argc, char * argv[])
 		exit(1);
 	}
 
-	//sets up host address struct
-	memset(&their_addr, 0, sizeof(their_addr)); 			/* zero struct*/
-	their_addr.sin_family = AF_INET;						/*...host byte order*/
-	their_addr.sin_port = htons(portNo);					/*...short, netwk byte order*/
-	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
+    memset(&my_addr, 0, sizeof(my_addr));   /* zero struct*/
+    my_addr.sin_family = AF_INET;           /* host byte order...*/
+    my_addr.sin_port = htons(MYPORT);       /* ...short, net. byte order*/
+    my_addr.sin_addr.s_addr = INADDR_ANY;   /* any of server IP addrs*/
 
-	// BuildDataGram(datagramBody, &timeOfRequest, &sysReqTime);
-	memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct*/
-	memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct*/
+    if(bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
+	{
+        perror("Listener bind");
+    	exit(1);
+	}
 
 	//Sets up the timeout for recv
-	timeout.tv_sec = 5;
-	timeout.tv_usec = 0;
-	setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(struct timeval));
+	//timeout.tv_sec = 5;
+	//timeout.tv_usec = 0;
+	//setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(struct timeval));
 
-	//initialises datagram to be sent to the server
-	DatagramInit(&dataSend, &ts);
+	do
+	{	
+		memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct */
+		memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct */
 
-	//sends datagram
-	if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
-	{ //sendto returns number of bytes sent
-		perror("Client: Error Sending Datagram");
-		getchar();
-		exit(1);
-	}
+		if((numbytes = recvfrom(sockfd, buf, MAXBUFLEN - 1, 0, (struct sockaddr *)&their_addr, &addr_len)) == -1)
+		{
+			perror("Client: Error Receiving Datagram");
+			getchar();
+			exit(1);
+		}
 
-	//recv error handlling and timeout handling
-	numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
-	if(numbytes == -1)
-	{
-		perror("Client: Error Receiving Datagram");
-		getchar();
-		exit(1);
-	}
-	else if (numbytes == EAGAIN)
-	{
-		perror("Client: Timeout connecting to host");
-		getchar();
-		exit(1);
-	}
-	else if(numbytes == EWOULDBLOCK)
-	{
-		perror("Client: Timeout connecting to host");
-		getchar();
-		exit(1);
-	}
+		//Fills outs datagram to send back to client 
+		DatagramInit(&dataRec);
+
+		//sends datagram
+		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
+		{ //sendto returns number of bytes sent
+			perror("Client: Error Sending Datagram");
+			getchar();
+			exit(1);
+		}
+
+	} while(1)
 
 	gettimeofdaysmall(&tv);
 	ts._systemTimeReceive = tv.tv_sec;
