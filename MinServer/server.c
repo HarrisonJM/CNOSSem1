@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
 {
 	struct hostent *he; /* host entity */
 	struct sockaddr_in server_addr, client_addr, my_addr;  /* server address info */
-	//struct timeStamps ts; /*Holds time stamps*/
+	struct timeStamps ts; /*Holds time stamps*/
 	struct datagram dataRec, dataSend; /* Our datagrams */
 	struct timeval tv;
 
@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
 	}
 
 	/* resolve server host name or IP address */
-	if((he = gethostbyname(NTPIPHOME2)) == NULL)
+	if((he = gethostbyname(NTPIPHOME3)) == NULL)
 	{
 			perror("Client: Cannot get host by name");
 			getchar();
@@ -77,30 +77,27 @@ int main(int argc, char * argv[])
 	//server address information 
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;                             
-	server_addr.sin_port = htons(123);                        
+	server_addr.sin_port = htons(123);	                        
 	server_addr.sin_addr = *((struct in_addr *)he -> h_addr); //FIX ME PLZ, dunno what it was, however
+
 
 	memset(&my_addr, 0, sizeof(my_addr)); 	/* zero struct*/
 	my_addr.sin_family = AF_INET;		/* host byte order...*/
 	my_addr.sin_port = htons(portNo);	/* ...short, net. byte order*/
 	my_addr.sin_addr.s_addr = htonl(INADDR_ANY);	/* any of server IP addrs*/
 
-	//binds server to a port
+			//binds server to a port
 	if(bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
 	{
-        perror("Listener bind");
+		close(sockfd);
+		perror("Listener bind");
 		getchar();
-    	exit(1);
-	}
-
-	if(listen(sockfd, 1) == -1)
-	{
-		perror("listen");
 		exit(1);
-	}
+	}	
 
 	do
-	{	memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct */
+	{	
+		memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct */
 		memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct */
 
 		printf("Waiting for packet\n");
@@ -113,8 +110,11 @@ int main(int argc, char * argv[])
 			getchar();
 			exit(1);
 		}
+
 		gettimeofday(&tv, NULL);
+
 		//sends datagram to a server
+		DatagramInit(&dataRec, &ts);
 		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&server_addr, sizeof(struct sockaddr))) == -1)
 		{ 
 			perror("SERVER: Error Sending Datagram to server");
@@ -125,8 +125,8 @@ int main(int argc, char * argv[])
 		printf("sent datagram to server\n");
 	
 		//receive datagram back from server	
-		//numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
-		if ((numbytes = recvfrom(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*) &server_addr, &addrlen)) == -1)
+		
+		numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
 	    if(numbytes == -1)
 	    {
 				perror("Client: Error Receiving Datagram");
@@ -137,7 +137,6 @@ int main(int argc, char * argv[])
 		ClientDatagram(&dataSend, &dataRec, &tv);
 
 		//Fills outs datagram to send back to client 
-		//DatagramInit(&dataRec);
 
 		//sends datagram back to client
 		if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&client_addr, sizeof(struct sockaddr))) == -1)

@@ -28,7 +28,7 @@
 
 //DataGram Information
 #define MAXDATASIZE 48 //bytes
-#define VNNUMBER 0b010
+#define VNNUMBER 0b001
 #define CLIENTMODE 0b110
 
 #define NTPEPOCH ((uint64_t)((365 * 70) + 17) * 24 * 60 * 60)

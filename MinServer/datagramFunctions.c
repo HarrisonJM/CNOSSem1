@@ -40,9 +40,8 @@ int DatagramInit(struct datagram *dataSend, struct timeStamps *ts)
 /***************************************************/
 int ClientDatagram(struct datagram* client, struct datagram* server, struct timeval *tv)
 {	
-	//NTP EPOCH!!!!!!!!!!!
-	client->_mode = 0b010;
-	client->_stratum--; //increment stratum, decremtn because endianess
+	client->_mode = 0b100;
+	client->_stratum = htons(ntohs(server->_stratum++));
 
 	client->_oriTimeSeconds = client->_traTimeSeconds;
 	client->_oriTimeMicro = client->_traTimeMicro;
@@ -52,8 +51,8 @@ int ClientDatagram(struct datagram* client, struct datagram* server, struct time
 
 	gettimeofday(tv, NULL);
 	
-	client->_traTimeSeconds = htonl(tv->tv_sec);
-	client->_traTimeMicro = htonl(tv->tv_usec);
+	client->_traTimeSeconds = htonl(tv->tv_sec + NTPEPOCH);
+	client->_traTimeMicro = htonl(tv->tv_usec + NTPEPOCH);
 
 	return 0;	
 }
