@@ -42,7 +42,7 @@ int ClientDatagram(struct datagram* client, struct datagram* server, struct time
 {	
 	//NTP EPOCH!!!!!!!!!!!
 	client->_mode = 0b010;
-	client->_stratum = 0b110;
+	client->_stratum--; //increment stratum, decremtn because endianess
 
 	client->_oriTimeSeconds = client->_traTimeSeconds;
 	client->_oriTimeMicro = client->_traTimeMicro;
