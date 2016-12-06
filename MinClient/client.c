@@ -4,7 +4,7 @@
 /* Program Name: 		NTPClient											*/
 /* Version: 			0.5													*/
 /* Date started: 		15/11/16											*/
-/* Date last edited: 	03/12/16											*/
+/* Date last edited: 	05/12/16											*/
 /* Description:																*/
 /*				The program, when supplied with the address for an NTP		*/ 
 /*				server, prints the date, time, time offset, and roundtrip   */
@@ -55,8 +55,7 @@ int main(int argc, char * argv[])
 	}
 
 	/* resolve server host name or IP address */
-	if((he = gethostbyname(NTPIPHOME2NAMME)) == NULL)
-	//if((he = gethostbyname(argv[1])) == NULL)
+	if((he = gethostbyname(argv[1])) == NULL)
 	{
 		perror("Client: Cannot get host by name");
 		getchar();
