@@ -33,17 +33,9 @@
 #define SERVERMODE 0b001
 
 #define NTPEPOCH ((uint64_t)((365 * 70) + 17) * 24 * 60 * 60)
-#define NTPEPOCH2 (uint64_t)2208988800LL
+#define NTPEPOCH2 (uint64_t)2208988800LL //seconds
 
 //70 years + 17 leap days, convert to seconds. Needs casting otherwise int overrun
-
-//datagram indexes for the char*
-#define REFIND 16 //time system clock
-#define ORIIND 24 //originate timesstamp, when timestamp was sent from client to server
-#define SERIND 32 //Time Server received datagram
-#define TRAIND 40 //Time datagram departed client/server
-
-#define DATETIMESIZE 26
 
 struct timeStamps
 {
@@ -97,26 +89,12 @@ struct offset
 	uint32_t _fraction;
 };
 
-uint64_t CurrentTimems();
-int CompileTimeStamp(unsigned char* s, uint64_t time);
-int TimeSendOut( uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
-int BuildDataGram(unsigned char* datagram, uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
-int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp);
-
 uint64_t htonll(uint64_t temp64);
 uint64_t ntohll(uint64_t temp64);
 
 int DatagramInit(struct datagram *dataSend, struct timeStamps *ts);
-
+int ClientDatagram(struct datagram* client, struct datagram* server, struct timeval *tv);
 void gettimeofdaysmall(struct timeval *tv);
 
-int HandleDatagram(struct timeStamps *ts, struct datagram *ds, 
-					struct timeval *offset, struct timeval *delay);
-int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg);
-int CalculateOffset(struct timeStamps *ts, struct timeval *offset);
-int CaluclateDelay(struct timeStamps *ts, struct timeval *delay);
-
-void PrintDateAndTime(struct timeStamps *ts, struct datagram *ds,
-						 struct timeval offset, struct timeval delay);
 
 #endif/*__MYSTRUCTS_H__*/

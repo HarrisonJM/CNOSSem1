@@ -27,7 +27,6 @@ int DatagramInit(struct datagram *dataSend, struct timeStamps *ts)
 	return 0;
 }
 
-
 /***************************************************/
 //Name: 
 //Parameters:
@@ -40,7 +39,7 @@ int DatagramInit(struct datagram *dataSend, struct timeStamps *ts)
 /***************************************************/
 int ClientDatagram(struct datagram* client, struct datagram* server, struct timeval *tv)
 {	
-	client->_mode = 0b100;
+	client->_mode = SERVERMODE;
 	client->_stratum = htons(ntohs(server->_stratum++));
 
 	client->_oriTimeSeconds = client->_traTimeSeconds;
@@ -55,25 +54,6 @@ int ClientDatagram(struct datagram* client, struct datagram* server, struct time
 	client->_traTimeMicro = htonl(tv->tv_usec + NTPEPOCH);
 
 	return 0;	
-}
-
-/***************************************************/
-//Name: HandleDatagram
-//Parameters: struct timeStamps*, struct datagram*, struct timeval*, struct timeval*
-//Returns: 0
-//Description:
-/* 
- * Handles the received datagram by making sense of
- * the received timestamps
- */
-/***************************************************/
-int HandleDatagram(struct timeStamps *ts, struct datagram *ds, struct timeval *offset, struct timeval *delay)
-{
-	TimeStampsReceived(ts, ds);	
-	CalculateOffset(ts, offset);
-	CaluclateDelay(ts, delay);
-
-	return 0;
 }
 
 /***************************************************/

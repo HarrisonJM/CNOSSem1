@@ -7,7 +7,7 @@
 /* Date last edited: 	03/12/16											*/
 /* Description:																*/
 /*				The program, when supplied with A Port to run on, opens a	*/ 
-/*				socket and waits for connections							*/
+/*				socket and waits for connections from NTP clients			*/
 /* 																			*/
 /****************************************************************************/
 /****************************************************************************/
@@ -32,7 +32,7 @@
 
 #include "definitions.h"
 
-int ClientDatagram(struct datagram* client, struct datagram* server, struct timeval *tv);
+
 
 int main(int argc, char * argv[])
 {
@@ -46,12 +46,10 @@ int main(int argc, char * argv[])
 	socklen_t addrlen = sizeof(client_addr);
 	int portNo;
 
-	//ArgHandler(argc, argv);
-
 	if(argc < 2)
 	{
 		fprintf(stderr, "usage: $NTPServer <port>\n");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
@@ -62,7 +60,7 @@ int main(int argc, char * argv[])
 	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) //sockfd = file descriptor
 	{
 		perror("Client: Socket Creation Failure");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
@@ -70,7 +68,7 @@ int main(int argc, char * argv[])
 	if((he = gethostbyname(NTPIPHOME3)) == NULL)
 	{
 			perror("Client: Cannot get host by name");
-			getchar();
+			//getchar();
 			exit(1);
 	}
 	
@@ -78,20 +76,19 @@ int main(int argc, char * argv[])
 	memset(&server_addr, 0, sizeof(server_addr));
 	server_addr.sin_family = AF_INET;                             
 	server_addr.sin_port = htons(123);	                        
-	server_addr.sin_addr = *((struct in_addr *)he -> h_addr); //FIX ME PLZ, dunno what it was, however
-
+	server_addr.sin_addr = *((struct in_addr *)he -> h_addr);
 
 	memset(&my_addr, 0, sizeof(my_addr)); 	/* zero struct*/
 	my_addr.sin_family = AF_INET;		/* host byte order...*/
 	my_addr.sin_port = htons(portNo);	/* ...short, net. byte order*/
 	my_addr.sin_addr.s_addr = htonl(INADDR_ANY);	/* any of server IP addrs*/
 
-			//binds server to a port
+	//binds server to a port
 	if(bind(sockfd, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1)
 	{
 		close(sockfd);
 		perror("Listener bind");
-		getchar();
+		//getchar();
 		exit(1);
 	}	
 
@@ -102,47 +99,46 @@ int main(int argc, char * argv[])
 
 		printf("Waiting for packet\n");
 
-		//receives datagram from client
-		//if ((numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0)) == -1);
+		//receives datagram from client and fills out a sockaddr struct to send the datagram back
 		if ((numbytes = recvfrom(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*) &client_addr, &addrlen)) == -1)
 		{
 			perror("SERVER: Error Receiving Datagram");
-			getchar();
+			//getchar();
 			exit(1);
 		}
 
-		gettimeofday(&tv, NULL);
+		gettimeofdaysmall(&tv);//Time server received tiem stamp (receive time stamp)
+
+		//inits a datagram to send to an NTP server
+		DatagramInit(&dataRec, &ts);
 
 		//sends datagram to a server
-		DatagramInit(&dataRec, &ts);
 		if((numbytes = sendto(sockfd, &dataRec, sizeof(dataRec), 0, (struct sockaddr*)&server_addr, sizeof(struct sockaddr))) == -1)
 		{ 
 			perror("SERVER: Error Sending Datagram to server");
-			getchar();
+			//getchar();
 			exit(1);
 		}
 			
 		printf("sent datagram to server\n");
 	
-		//receive datagram back from server	
-		
+		//receive datagram back from server		
 		numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
 	    if(numbytes == -1)
 	    {
 				perror("Client: Error Receiving Datagram");
-				getchar();
+				//getchar();
 				exit(1);
 		}
 		
-		ClientDatagram(&dataSend, &dataRec, &tv);
-
-		//Fills outs datagram to send back to client 
+		//Fills outs datagram to send back to client
+		ClientDatagram(&dataSend, &dataRec, &tv);		 
 
 		//sends datagram back to client
 		if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&client_addr, sizeof(struct sockaddr))) == -1)
 		{ //sendto returns number of bytes sent
 			perror("SERVER: Error Sending Datagram");
-			getchar();
+			//getchar();
 			exit(1);
 		}
 
