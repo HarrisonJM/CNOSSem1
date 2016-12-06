@@ -11,6 +11,6 @@ OBJ =  client.o argumenthandling.o datagramFunctions.o timeFunctions.o
 NTPClient: $(OBJ)
 	gcc -g -o $@ $^ $(CFLAGS)
 
-#clean:
-#	rm -f *.o
+clean:
+	rm -f *.o
 
