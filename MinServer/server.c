@@ -38,11 +38,12 @@ int main(int argc, char * argv[])
 {
 	struct hostent *he; /* host entity */
 	struct sockaddr_in server_addr, client_addr, my_addr;  /* server address info */
-	struct timeStamps ts; /*Holds time stamps*/
+	//struct timeStamps ts; /*Holds time stamps*/
 	struct datagram dataRec, dataSend; /* Our datagrams */
-	struct timeval tv, timeout, offset, delay;
+	struct timeval tv;
 
-	int sockfd, numbytes, addrlen = sizeof(client_addr);
+	int sockfd, numbytes;
+	socklen_t addrlen = sizeof(client_addr);
 	int portNo;
 
 	//ArgHandler(argc, argv);
@@ -99,7 +100,7 @@ int main(int argc, char * argv[])
 		printf("Waiting for packet\n");
 
 		//receives datagram from client
-	        if ((numbytes = recvfrom(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*) &client_addr, &addrlen)) == -1)
+		if ((numbytes = recvfrom(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*) &client_addr, &addrlen)) == -1)
 		{
 			perror("SERVER: Error Receiving Datagram");
 			getchar();

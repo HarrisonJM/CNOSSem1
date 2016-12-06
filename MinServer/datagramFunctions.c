@@ -54,7 +54,8 @@ int ClientDatagram(struct datagram* client, struct datagram* server, struct time
 	
 	client->_traTimeSeconds = htonl(tv->tv_sec);
 	client->_traTimeMicro = htonl(tv->tv_usec);
-	
+
+	return 0;	
 }
 
 /***************************************************/
