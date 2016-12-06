@@ -121,12 +121,12 @@ int main(int argc, char * argv[])
 	
 		//receive datagram back from server	
 		numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
-	        if(numbytes == -1)
-	        {
-	                perror("Client: Error Receiving Datagram");
-                	getchar();
-        	        exit(1);
-	        }
+	    if(numbytes == -1)
+	    {
+				perror("Client: Error Receiving Datagram");
+				getchar();
+				exit(1);
+		}
 
 		
 		ClientDatagram(&dataSend, &dataRec, &tv);
