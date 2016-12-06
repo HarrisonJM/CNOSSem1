@@ -55,7 +55,8 @@ int main(int argc, char * argv[])
 	}
 
 	/* resolve server host name or IP address */
-	if((he = gethostbyname(argv[1])) == NULL)
+	if((he = gethostbyname(NTPIPHOME2NAMME)) == NULL)
+	//if((he = gethostbyname(argv[1])) == NULL)
 	{
 		perror("Client: Cannot get host by name");
 		getchar();
