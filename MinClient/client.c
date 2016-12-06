@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
 	if(argc < 3)
 	{
 		fprintf(stderr, "usage: $NTPClient <SNTP Server Address> <port (type 123 for default)>\n");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
@@ -58,7 +58,7 @@ int main(int argc, char * argv[])
 	if((he = gethostbyname(argv[1])) == NULL)
 	{
 		perror("Client: Cannot get host by name");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
@@ -69,7 +69,7 @@ int main(int argc, char * argv[])
 	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) //sockfd = file descriptor
 	{
 		perror("Client: Socket Creation Failure");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
@@ -79,7 +79,6 @@ int main(int argc, char * argv[])
 	their_addr.sin_port = htons(portNo);					/*...short, netwk byte order*/
 	their_addr.sin_addr = *((struct in_addr *)he -> h_addr);
 
-	// BuildDataGram(datagramBody, &timeOfRequest, &sysReqTime);
 	memset(&dataSend, 0, sizeof(dataSend)); 		/* zero struct*/
 	memset(&dataRec, 0, sizeof(dataRec)); 			/* zero struct*/
 
@@ -93,33 +92,34 @@ int main(int argc, char * argv[])
 
 	//sends datagram
 	if((numbytes = sendto(sockfd, &dataSend, sizeof(dataSend), 0, (struct sockaddr*)&their_addr, sizeof(struct sockaddr))) == -1)
-	{ //sendto returns number of bytes sent
+	{ 
 		perror("Client: Error Sending Datagram");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
-	//recv error handlling and timeout handling
+	//recv error handling and timeout handling
 	numbytes = recv(sockfd, &dataRec, sizeof(dataRec), 0);
 	if(numbytes == -1)
 	{
 		perror("Client: Error Receiving Datagram");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 	else if (numbytes == EAGAIN)
 	{
 		perror("Client: Timeout connecting to host");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 	else if(numbytes == EWOULDBLOCK)
 	{
 		perror("Client: Timeout connecting to host");
-		getchar();
+		//getchar();
 		exit(1);
 	}
 
+	//Immediately get time that the datagram was received
 	gettimeofdaysmall(&tv);
 	ts._systemTimeReceive = tv.tv_sec;
 
@@ -140,6 +140,6 @@ int main(int argc, char * argv[])
 	}
 
 	close(sockfd);
-	getchar();
+	//getchar();
 	return 0;
 }

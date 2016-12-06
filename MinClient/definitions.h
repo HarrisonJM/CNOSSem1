@@ -96,26 +96,16 @@ struct offset
 	uint32_t _fraction;
 };
 
-uint64_t CurrentTimems();
-int CompileTimeStamp(unsigned char* s, uint64_t time);
-int TimeSendOut( uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
-int BuildDataGram(unsigned char* datagram, uint64_t* timeOfRequest, uint64_t* systemTimeOfRequest);
-int FixTimeStamp(char* DR, unsigned char* fixedTimeStamp);
-
 uint64_t htonll(uint64_t temp64);
 uint64_t ntohll(uint64_t temp64);
 
 int DatagramInit(struct datagram *dataSend, struct timeStamps *ts);
+int HandleDatagram(struct timeStamps *ts, struct datagram *ds, struct timeval *offset, struct timeval *delay);
 
 void gettimeofdaysmall(struct timeval *tv);
-
-int HandleDatagram(struct timeStamps *ts, struct datagram *ds, 
-					struct timeval *offset, struct timeval *delay);
-int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg);
 int CalculateOffset(struct timeStamps *ts, struct timeval *offset);
 int CaluclateDelay(struct timeStamps *ts, struct timeval *delay);
-
-void PrintDateAndTime(struct timeStamps *ts, struct datagram *ds,
-						 struct timeval offset, struct timeval delay);
+int TimeStampsReceived(struct timeStamps *ts, struct datagram *dg);
+void PrintDateAndTime(struct timeStamps *ts, struct datagram *ds, struct timeval offset, struct timeval delay);
 
 #endif/*__MYSTRUCTS_H__*/
